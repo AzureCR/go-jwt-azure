@@ -54,33 +54,15 @@ func NewKeyWithContext(ctx context.Context, client keyvaultapi.BaseClientAPI, ke
 
 // Sign signs the message with the algorithm provided.
 func (k *Key) Sign(algorithm keyvault.JSONWebKeySignatureAlgorithm, message []byte) ([]byte, error) {
-	sig, err := k.signToBase64RawURL(algorithm, message)
+	digest, err := ComputeHash(algorithm, message)
 	if err != nil {
 		return nil, err
 	}
-	return base64.RawURLEncoding.DecodeString(sig)
-}
-
-// signToBase64RawURL signs the message and returns the signature in base64 raw URL form.
-func (k *Key) signToBase64RawURL(algorithm keyvault.JSONWebKeySignatureAlgorithm, message []byte) (string, error) {
-	digest, err := ComputeHash(algorithm, message)
-	if err != nil {
-		return "", err
-	}
-	return k.signDigestToBase64RawURL(algorithm, digest)
+	return k.SignDigest(algorithm, digest)
 }
 
 // SignDigest signs the message digest with the algorithm provided.
 func (k *Key) SignDigest(algorithm keyvault.JSONWebKeySignatureAlgorithm, digest []byte) ([]byte, error) {
-	sig, err := k.signDigestToBase64RawURL(algorithm, digest)
-	if err != nil {
-		return nil, err
-	}
-	return base64.RawURLEncoding.DecodeString(sig)
-}
-
-// signDigestToBase64RawURL signs the message digest and returns the signature in base64 raw URL form.
-func (k *Key) signDigestToBase64RawURL(algorithm keyvault.JSONWebKeySignatureAlgorithm, digest []byte) (string, error) {
 	// Prepare the message
 	value := base64.RawURLEncoding.EncodeToString(digest)
 
@@ -96,17 +78,17 @@ func (k *Key) signDigestToBase64RawURL(algorithm keyvault.JSONWebKeySignatureAlg
 		},
 	)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Verify the result
 	if res.Kid == nil || *res.Kid != k.id {
-		return "", ErrMismatchResponseKeyID
+		return nil, ErrMismatchResponseKeyID
 	}
 	if res.Result == nil {
-		return "", ErrInvalidServerResponse
+		return nil, ErrInvalidServerResponse
 	}
-	return *res.Result, nil
+	return base64.RawURLEncoding.DecodeString(*res.Result)
 }
 
 // Verify verifies the message  with the algorithm provided against the signature.
