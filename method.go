@@ -7,6 +7,20 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
+// Specific instances of SigningMethod for a certain algorithms.
+var (
+	SigningMethodES256  = &SigningMethod{algorithm: keyvault.ES256}
+	SigningMethodES256K = &SigningMethod{algorithm: keyvault.ES256K}
+	SigningMethodES384  = &SigningMethod{algorithm: keyvault.ES384}
+	SigningMethodES512  = &SigningMethod{algorithm: keyvault.ES512}
+	SigningMethodPS256  = &SigningMethod{algorithm: keyvault.PS256}
+	SigningMethodPS384  = &SigningMethod{algorithm: keyvault.PS384}
+	SigningMethodPS512  = &SigningMethod{algorithm: keyvault.PS512}
+	SigningMethodRS256  = &SigningMethod{algorithm: keyvault.RS256}
+	SigningMethodRS384  = &SigningMethod{algorithm: keyvault.RS384}
+	SigningMethodRS512  = &SigningMethod{algorithm: keyvault.RS512}
+)
+
 // SigningMethod for Azure Key Vault.
 type SigningMethod struct {
 	algorithm keyvault.JSONWebKeySignatureAlgorithm
