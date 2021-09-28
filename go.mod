@@ -1,4 +1,4 @@
-module github.com/shizhMSFT/go-jwt-azure
+module github.com/AzureCR/go-jwt-azure
 
 go 1.17
 
