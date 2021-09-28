@@ -4,7 +4,7 @@ import (
 	"crypto"
 
 	"github.com/Azure/azure-sdk-for-go/services/keyvault/v7.1/keyvault"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // HashAlgorithms maps JWK signing algorithms to their corresponding hash algorithms.
@@ -21,6 +21,7 @@ var HashAlgorithms = map[keyvault.JSONWebKeySignatureAlgorithm]crypto.Hash{
 	keyvault.RS512:  crypto.SHA512,
 }
 
+// ComputeHash computes the digest of the message with the given hash algorithm.
 func ComputeHash(algorithm keyvault.JSONWebKeySignatureAlgorithm, message []byte) ([]byte, error) {
 	hash, ok := HashAlgorithms[algorithm]
 	if !ok {

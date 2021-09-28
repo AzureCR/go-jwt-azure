@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 
 	"github.com/Azure/azure-sdk-for-go/services/keyvault/v7.1/keyvault"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // Specific instances of SigningMethod for a certain algorithms.

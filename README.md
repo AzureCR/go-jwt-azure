@@ -16,7 +16,7 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
 	"github.com/Azure/go-autorest/autorest/azure"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 	jwtazure "github.com/shizhMSFT/go-jwt-azure"
 )
 
@@ -33,32 +33,42 @@ func main() {
 
 	// Get remote key
 	client, err := getClient(tid, cid, secret)
-	panicOnError(err)
+	fail(err)
 	key, err := jwtazure.NewKey(client, kid)
-	panicOnError(err)
+	fail(err)
 
 	// Generate a JWT token
 	token := jwt.NewWithClaims(jwtazure.SigningMethodPS512, jwt.MapClaims{
 		"sub": "demo",
 	})
 	serialized, err := token.SignedString(key)
-	panicOnError(err)
+	fail(err)
 
 	// Print the serialized token
 	fmt.Println(serialized)
 
-	// Parse and verify the token
+	// Parse and verify the token locally
+	cert, err := key.Certificate()
+	fail(err)
+	_, err = jwt.Parse(serialized, func(token *jwt.Token) (interface{}, error) {
+		if alg := token.Method.Alg(); alg != jwt.SigningMethodPS512.Alg() {
+			return nil, fmt.Errorf("unexpected signing method: %v", alg)
+		}
+		return cert.PublicKey, nil
+	})
+	fail(err)
+
+	// Parse and verify the token remotely
 	jwt.RegisterSigningMethod(jwtazure.SigningMethodPS512.Alg(), func() jwt.SigningMethod {
 		return jwtazure.SigningMethodPS512
 	})
-	token, err = jwt.Parse(serialized, func(token *jwt.Token) (interface{}, error) {
+	_, err = jwt.Parse(serialized, func(token *jwt.Token) (interface{}, error) {
 		if alg := token.Method.Alg(); alg != jwtazure.SigningMethodPS512.Alg() {
-			return nil, fmt.Errorf("Unexpected signing method: %v", alg)
+			return nil, fmt.Errorf("unexpected signing method: %v", alg)
 		}
 		return key, nil
 	})
-	panicOnError(err)
-	fmt.Println(token.Valid)
+	fail(err)
 }
 
 func getClient(tenantID, clientID, secret string) (keyvaultapi.BaseClientAPI, error) {
@@ -77,7 +87,7 @@ func getClient(tenantID, clientID, secret string) (keyvaultapi.BaseClientAPI, er
 	return client, nil
 }
 
-func panicOnError(err error) {
+func fail(err error) {
 	if err != nil {
 		panic(err)
 	}
@@ -88,7 +98,6 @@ The above code outputs:
 
 ```
 eyJhbGciOiJQUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkZW1vIn0.iXopV96iaVk4i2_FefAr6v99LCdlSvjeiPGVUlwxX-9-Oo5MJIzqAtITbF30biuNrFeQs-nT_LD3yW85wuZXtAvtq1GQLEEUgbB7_RKgb04UGFne5keCaKuKeIzXVubF4-R9qrVnuyb9Igvu7eg_RdXm-Cr1V3OHEy49AlvKV3iDjam1_iChTZe2FywWcemjDK-0UBMRRxQDgdJuullkBwmtmPriaspF3Y3DSA7nZNGnHdkshrNPaImYo_uIRvuElToRCldD6XBUI5Czu1ax9rUR5VPw7kinF_RL-ETKu0H2mMaUnlKr6iI4yP4xjXdXBIuNpKs-VVOJkwkjRrhn4Q
-true
 ```
 
 The JWS compact object in the output can be pretty printed as

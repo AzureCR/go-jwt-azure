@@ -2,6 +2,7 @@ package azure
 
 import "errors"
 
+// Common error
 var (
 	ErrInvalidServerResponse = errors.New("azure: invalid server response")
 	ErrMismatchResponseKeyID = errors.New("azure: response key id mismatch")

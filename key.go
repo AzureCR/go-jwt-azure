@@ -2,13 +2,14 @@ package azure
 
 import (
 	"context"
+	"crypto/x509"
 	"encoding/base64"
 	"net/url"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/keyvault/v7.1/keyvault"
 	"github.com/Azure/azure-sdk-for-go/services/keyvault/v7.1/keyvault/keyvaultapi"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // Key represents a remote key in the Azure Key Vault.
@@ -128,4 +129,21 @@ func (k *Key) VerifyDigest(algorithm keyvault.JSONWebKeySignatureAlgorithm, dige
 		return ErrVerification
 	}
 	return nil
+}
+
+// Certificate returns the X.509 certificate associated with the key.
+func (k *Key) Certificate() (*x509.Certificate, error) {
+	res, err := k.Client.GetCertificate(
+		k.Context,
+		k.vaultBaseURL,
+		k.name,
+		k.version,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if res.Cer == nil {
+		return nil, ErrInvalidServerResponse
+	}
+	return x509.ParseCertificate(*res.Cer)
 }
