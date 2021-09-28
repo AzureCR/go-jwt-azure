@@ -21,6 +21,20 @@ var (
 	SigningMethodRS512  = &SigningMethod{algorithm: keyvault.RS512}
 )
 
+// SigningMethods maps JWK signing algorithms to their corresponding implementation.
+var SigningMethods = map[keyvault.JSONWebKeySignatureAlgorithm]*SigningMethod{
+	keyvault.ES256:  SigningMethodES256,
+	keyvault.ES256K: SigningMethodES256K,
+	keyvault.ES384:  SigningMethodES384,
+	keyvault.ES512:  SigningMethodES512,
+	keyvault.PS256:  SigningMethodPS256,
+	keyvault.PS384:  SigningMethodPS384,
+	keyvault.PS512:  SigningMethodPS512,
+	keyvault.RS256:  SigningMethodRS256,
+	keyvault.RS384:  SigningMethodRS384,
+	keyvault.RS512:  SigningMethodRS512,
+}
+
 // SigningMethod for Azure Key Vault.
 type SigningMethod struct {
 	algorithm keyvault.JSONWebKeySignatureAlgorithm
